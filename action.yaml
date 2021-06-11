@@ -1,0 +1,8 @@
+name: 'Prepare'
+description: 'Prepare matrix of sources files to S3 destinations'
+outputs:
+  matrix:
+    description: 'JSON list of objects for Job Strategy Matrix'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
