@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euxo pipefail
 
 declare -a SOURCES
 declare -r MAIN_DIR="complete"
