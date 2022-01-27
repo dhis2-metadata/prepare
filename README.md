@@ -1,11 +1,17 @@
-# Prepare `jobs.<job_id>.strategy.matrix` docker action
+# TODO
+- [ ] Update readme
 
-This action prepares a Job Strategy Matrix as JSON, to be used for a "Publish" workflow.
+# "Prepare" Docker action
+
+...
 
 ## Outputs
 
-### `matrix`
-The JSON list of objects, to be used as Matrix.
+### `archive_dir`
+Directory with Packages to be archived.
+
+### `destination`
+S3 destination to upload to.
 
 ## Example usage
 

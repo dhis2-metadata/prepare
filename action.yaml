@@ -1,5 +1,5 @@
 name: 'Prepare'
-description: 'Prepare matrix of sources files to S3 destinations'
+description: '...'
 #inputs:
 #  checkout_path:
 #    description: 'Checkout path containing packages'
