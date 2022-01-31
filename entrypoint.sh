@@ -81,6 +81,8 @@ getPackageObject() {
   fi
 }
 
+cd $1
+
 findPackageDirs
 
 createArchiveDir

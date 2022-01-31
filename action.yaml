@@ -1,18 +1,16 @@
 name: 'Prepare'
-description: '...'
-#inputs:
-#  checkout_path:
-#    description: 'Checkout path containing packages'
-#    required: true
+description: 'Move and prepare packages for upload to S3.'
+inputs:
+  working_dir:
+    description: 'Working directory path containing packages.'
+    required: true
 outputs:
   archive_dir:
     description: 'Directory with Packages to be archived.'
   destination:
     description: 'S3 destination to upload to.'
-#  matrix:
-#    description: 'JSON list of objects for Job Strategy Matrix'
 runs:
   using: 'docker'
   image: 'Dockerfile'
-#  args:
-#    - ${{ inputs.checkout_path }}
+  args:
+    - ${{ inputs.working_dir }}
