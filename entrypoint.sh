@@ -2,8 +2,9 @@
 
 set -euxo pipefail
 
-declare -a PACKAGE_DIRS
+declare -r WORKING_DIRECTORY="$1"
 declare -r DEFAULT_PACKAGE_NAME="metadata.json"
+declare -a PACKAGE_DIRS
 declare CODE
 declare PACKAGE_VERSION
 declare DHIS2_VERSION
@@ -25,9 +26,9 @@ createArchiveDir() {
 
   DESTINATION="$LOCALE/${CODE:0:4}/$PACKAGE_VERSION/$DHIS2_VERSION"
 
-  ARCHIVE_DIR="../${CODE:0:4}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
+  ARCHIVE_DIR="${CODE:0:4}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
-  mkdir -p "$ARCHIVE_DIR"
+  mkdir -p "../$ARCHIVE_DIR"
 }
 
 getPackageDetails() {
@@ -41,10 +42,10 @@ getPackageDetails() {
 movePackages() {
   for dir in "${PACKAGE_DIRS[@]}"
   do
-    cp -r "$dir" "$ARCHIVE_DIR"
+    cp -r "$dir" "../$ARCHIVE_DIR"
   done
 
-  local package_files=($(findPackages "$ARCHIVE_DIR"))
+  local package_files=($(findPackages "../$ARCHIVE_DIR"))
 
   for file in "${package_files[@]}"
   do
@@ -81,7 +82,7 @@ getPackageObject() {
   fi
 }
 
-cd $1
+cd "$WORKING_DIRECTORY"
 
 findPackageDirs
 
@@ -90,4 +91,4 @@ createArchiveDir
 movePackages
 
 echo "::set-output name=archive_dir::$ARCHIVE_DIR"
-echo "::set-output name=destination::$ARCHIVE_DIR"
+echo "::set-output name=destination::$DESTINATION"
