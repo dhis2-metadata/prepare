@@ -11,14 +11,18 @@ declare DHIS2_VERSION
 declare ARCHIVE_DIR
 declare DESTINATION
 
+# Find all sub-package directories.
 findPackageDirs() {
   PACKAGE_DIRS=($(find * -type d | sort))
 }
 
+# $1 - directory
+# Find "package" files.
 findPackages() {
   find "$1" -type f -name "$DEFAULT_PACKAGE_NAME" | sort
 }
 
+# Create archive dir and it's destination, based on the package details.
 createArchiveDir() {
   local first_package=$(findPackages *)
 
@@ -31,6 +35,7 @@ createArchiveDir() {
   mkdir -p "../$ARCHIVE_DIR"
 }
 
+# Get the package details.
 getPackageDetails() {
   local object=$(getPackageObject "$1")
   CODE=$(echo "$object" | jq -r '.code')
@@ -39,6 +44,7 @@ getPackageDetails() {
   LOCALE=$(echo "$object" | jq -r '.locale')
 }
 
+# Move packages to the archive directory.
 movePackages() {
   for dir in "${PACKAGE_DIRS[@]}"
   do
@@ -54,28 +60,28 @@ movePackages() {
   done
 }
 
-# $1 file
-# check if the file is in a subset dir
+# $1 - file
+# Check if the file is in a subset dir.
 function isInSubsetDir {
   [[ "$1" =~ $SUBSET_DIR  ]]
 }
 
 # $1 - file
-# if the extension is json, it's a "package"
+# If the extension is json, it's a "package".
 isPackage() {
   local file=$(basename "$1")
   [[ "${file#*.}" == "json" ]]
 }
 
 # $1 - file
-# if the extension is html or xlsx, it's a "reference"
+# If the extension is html or xlsx, it's a "reference".
 isReference() {
   local file=$(basename "$1")
   [[ "${file#*.}" == "html" ]] || [[ "${file#*.}" == "xlsx" ]]
 }
 
 # $1 - file
-# get "package" JSON object from file
+# Get "package" JSON object from file.
 getPackageObject() {
   if isPackage "$1"; then
     jq -r '.package' < "$1"
