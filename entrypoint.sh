@@ -14,17 +14,27 @@ declare DESTINATION
 # Find all sub-package directories.
 findPackageDirs() {
   PACKAGE_DIRS=($(find * -type d | sort))
+
+  if [[ -z "$PACKAGE_DIRS" ]]; then
+    echo "No sub-package directories found."
+    exit 1
+  fi
 }
 
 # $1 - directory
-# Find "package" files.
+# Find "package" files within a given directory.
 findPackages() {
   find "$1" -type f -name "$DEFAULT_PACKAGE_NAME" | sort
 }
 
-# Create archive dir and it's destination, based on the package details.
+# Create archive dir and its destination on S3, based on the package details.
 createArchiveDir() {
   local first_package=$(findPackages *)
+
+  if [[ -z "$first_package" ]]; then
+    echo "No package file found."
+    exit 1
+  fi
 
   getPackageDetails "$first_package"
 
@@ -53,17 +63,16 @@ movePackages() {
 
   local package_files=($(findPackages "../$ARCHIVE_DIR"))
 
+  if [[ -z "$package_files" ]]; then
+    echo "No package files found in the archive dir."
+    exit 1
+  fi
+
   for file in "${package_files[@]}"
   do
     getPackageDetails "$file"
     mv "$file" "$(dirname $file)/${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}.json"
   done
-}
-
-# $1 - file
-# Check if the file is in a subset dir.
-function isInSubsetDir {
-  [[ "$1" =~ $SUBSET_DIR  ]]
 }
 
 # $1 - file
