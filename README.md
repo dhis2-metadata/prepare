@@ -7,8 +7,11 @@ Move and prepare Packages for archiving and publishing to S3.
 ### `archive_dir`
 Directory with Packages to be archived.
 
-### `destination`
-S3 destination path (prefix) to upload the Packages archive to.
+### `locale`
+Package locale.
+
+### `prefix`
+Package prefix
 
 ## Example usage
 
@@ -36,5 +39,5 @@ jobs:
         with:
           ...
           source: "${{ steps.move_packages.outputs.archive_dir }}.zip"
-          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.destination }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
+          dest: "s3://${{ secrets.S3_BUCKET }}/$DESTINATION/${{ steps.move_packages.outputs.archive_dir }}.zip"
 ```

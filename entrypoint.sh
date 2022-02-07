@@ -38,8 +38,6 @@ createArchiveDir() {
 
   getPackageDetails "$first_package"
 
-  DESTINATION="$LOCALE/${CODE:0:4}/$PACKAGE_VERSION/DHIS$DHIS2_VERSION"
-
   ARCHIVE_DIR="${CODE:0:4}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
   mkdir -p "../$ARCHIVE_DIR"
@@ -106,4 +104,5 @@ createArchiveDir
 movePackages
 
 echo "::set-output name=archive_dir::$ARCHIVE_DIR"
-echo "::set-output name=destination::$DESTINATION"
+echo "::set-output name=locale::$LOCALE"
+echo "::set-output name=prefix::${CODE:0:4}"
