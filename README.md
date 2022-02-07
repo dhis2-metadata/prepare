@@ -4,22 +4,25 @@ Move and prepare Packages for archiving and publishing to S3.
 
 ## Inputs
 
-### working_dir
+### `working_dir`
 Working directory path containing packages.
 
-### package_version
+### `package_version`
 The new version for the package.
 
 ## Outputs
 
 ### `archive_dir`
-Directory with Packages to be archived.
+Directory with packages to be archived.
 
 ### `package_locale`
 Locale of the package.
 
 ### `package_prefix`
 Package prefix code.
+
+### `dhis2_version`
+DHIS2 version the package was extracted from.
 
 ## Example usage
 

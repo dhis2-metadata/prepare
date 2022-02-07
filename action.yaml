@@ -8,10 +8,14 @@ inputs:
     description: 'The new version for the package.'
     required: true
 outputs:
+  archive_dir:
+    description: 'Directory with packages to be archived.'
   package_locale:
     description: 'Locale of the package.'
   package_prefix:
     description: 'Package prefix code.'
+  dhis2_version:
+    description: 'DHIS2 version the package was extracted from.'
 runs:
   using: 'docker'
   image: 'Dockerfile'

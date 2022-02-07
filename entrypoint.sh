@@ -8,8 +8,8 @@ declare -r DEFAULT_PACKAGE_NAME="metadata.json"
 declare -a PACKAGE_DIRS
 declare CODE
 declare DHIS2_VERSION
+declare LOCALE
 declare ARCHIVE_DIR
-declare DESTINATION
 
 # Find all sub-package directories.
 findPackageDirs() {
@@ -27,7 +27,30 @@ findPackages() {
   find "$1" -type f -name "$DEFAULT_PACKAGE_NAME" | sort
 }
 
-# Create archive dir and its destination on S3, based on the package details.
+# $1 - file
+# If the file's extension is json, it's a "package".
+isPackage() {
+  local file=$(basename "$1")
+  [[ "${file#*.}" == "json" ]]
+}
+
+# $1 - file
+# Get "package" JSON object from file.
+getPackageObject() {
+  if isPackage "$1"; then
+    jq -r '.package' < "$1"
+  fi
+}
+
+# Get the package details.
+getPackageDetails() {
+  local object=$(getPackageObject "$1")
+  CODE=$(echo "$object" | jq -r '.code')
+  DHIS2_VERSION=$(echo "$object" | jq -r '.DHIS2Version' | cut -d '.' -f 1,2)
+  LOCALE=$(echo "$object" | jq -r '.locale')
+}
+
+# Create archive dir based on the package details.
 createArchiveDir() {
   local first_package=$(findPackages *)
 
@@ -41,14 +64,6 @@ createArchiveDir() {
   ARCHIVE_DIR="${CODE:0:4}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
   mkdir -p "../$ARCHIVE_DIR"
-}
-
-# Get the package details.
-getPackageDetails() {
-  local object=$(getPackageObject "$1")
-  CODE=$(echo "$object" | jq -r '.code')
-  DHIS2_VERSION=$(echo "$object" | jq -r '.DHIS2Version' | cut -d '.' -f 1,2)
-  LOCALE=$(echo "$object" | jq -r '.locale')
 }
 
 # Move packages to the archive directory.
@@ -72,21 +87,6 @@ movePackages() {
   done
 }
 
-# $1 - file
-# If the extension is json, it's a "package".
-isPackage() {
-  local file=$(basename "$1")
-  [[ "${file#*.}" == "json" ]]
-}
-
-# $1 - file
-# Get "package" JSON object from file.
-getPackageObject() {
-  if isPackage "$1"; then
-    jq -r '.package' < "$1"
-  fi
-}
-
 cd "$WORKING_DIRECTORY"
 
 findPackageDirs
@@ -98,3 +98,4 @@ movePackages
 echo "::set-output name=archive_dir::$ARCHIVE_DIR"
 echo "::set-output name=package_locale::$LOCALE"
 echo "::set-output name=package_prefix::${CODE:0:4}"
+echo "::set-output name=dhis2_version::$DHIS2_VERSION"
