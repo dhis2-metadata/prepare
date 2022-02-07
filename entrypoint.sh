@@ -3,10 +3,10 @@
 set -euxo pipefail
 
 declare -r WORKING_DIRECTORY="$1"
+declare -r PACKAGE_VERSION="$2"
 declare -r DEFAULT_PACKAGE_NAME="metadata.json"
 declare -a PACKAGE_DIRS
 declare CODE
-declare PACKAGE_VERSION
 declare DHIS2_VERSION
 declare ARCHIVE_DIR
 declare DESTINATION
@@ -47,7 +47,6 @@ createArchiveDir() {
 getPackageDetails() {
   local object=$(getPackageObject "$1")
   CODE=$(echo "$object" | jq -r '.code')
-  PACKAGE_VERSION=$(echo "$object" | jq -r '.version')
   DHIS2_VERSION=$(echo "$object" | jq -r '.DHIS2Version' | cut -d '.' -f 1,2)
   LOCALE=$(echo "$object" | jq -r '.locale')
 }

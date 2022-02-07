@@ -4,13 +4,17 @@ inputs:
   working_dir:
     description: 'Working directory path containing packages.'
     required: true
+  package_version:
+    description: 'The new version for the package.'
+    required: true
 outputs:
-  archive_dir:
-    description: 'Directory with Packages to be archived.'
-  destination:
-    description: 'S3 destination to upload to.'
+  package_locale:
+    description: 'Locale of the package.'
+  package_prefix:
+    description: 'Package prefix code.'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
     - ${{ inputs.working_dir }}
+    - ${{ inputs.package_version }}
