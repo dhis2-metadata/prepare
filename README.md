@@ -7,10 +7,10 @@ Move and prepare Packages for archiving and publishing to S3.
 ### `archive_dir`
 Directory with Packages to be archived.
 
-### `locale`
+### `package_locale`
 Package locale.
 
-### `prefix`
+### `package_prefix`
 Package prefix
 
 ## Example usage

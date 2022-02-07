@@ -81,13 +81,6 @@ isPackage() {
 }
 
 # $1 - file
-# If the extension is html or xlsx, it's a "reference".
-isReference() {
-  local file=$(basename "$1")
-  [[ "${file#*.}" == "html" ]] || [[ "${file#*.}" == "xlsx" ]]
-}
-
-# $1 - file
 # Get "package" JSON object from file.
 getPackageObject() {
   if isPackage "$1"; then
@@ -104,5 +97,5 @@ createArchiveDir
 movePackages
 
 echo "::set-output name=archive_dir::$ARCHIVE_DIR"
-echo "::set-output name=locale::$LOCALE"
-echo "::set-output name=prefix::${CODE:0:4}"
+echo "::set-output name=package_locale::$LOCALE"
+echo "::set-output name=package_prefix::${CODE:0:4}"
