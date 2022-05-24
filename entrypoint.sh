@@ -11,12 +11,12 @@ declare DHIS2_VERSION
 declare LOCALE
 declare ARCHIVE_DIR
 
-# Find all sub-package directories.
+# Find all package directories.
 findPackageDirs() {
   PACKAGE_DIRS=($(find * -type d | sort))
 
   if [[ -z "$PACKAGE_DIRS" ]]; then
-    echo "No sub-package directories found."
+    echo "No package directories found."
     exit 1
   fi
 }
