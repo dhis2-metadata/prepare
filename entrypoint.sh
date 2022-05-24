@@ -5,6 +5,10 @@ set -euxo pipefail
 declare -r WORKING_DIRECTORY="$1"
 declare -r PACKAGE_VERSION="$2"
 declare -r DEFAULT_PACKAGE_NAME="metadata.json"
+declare -r DEFAULT_PACKAGE_DIR="packages"
+declare -r COMPLETE_PACKAGE="COMPLETE"
+declare -r DASHBOARD_PACKAGE="DASHBOARD"
+declare -r DASHBOARD_PACKAGE_TYPE="DSH"
 declare -a PACKAGE_DIRS
 declare CODE
 declare BASE_CODE
@@ -15,7 +19,7 @@ declare ARCHIVE_DIR
 
 # Find all package directories.
 findPackageDirs() {
-  PACKAGE_DIRS=($(find * -type d | sort))
+  PACKAGE_DIRS=($(find $DEFAULT_PACKAGE_DIR/* -type d | sort))
 
   if [[ -z "$PACKAGE_DIRS" ]]; then
     echo "No package directories found."
@@ -55,7 +59,7 @@ getPackageDetails() {
 
 # Create archive dir based on the package details.
 createArchiveDir() {
-  local first_package=$(findPackages *)
+  local first_package=$(findPackages $DEFAULT_PACKAGE_DIR/*)
 
   if [[ -z "$first_package" ]]; then
     echo "No package file found."
@@ -89,18 +93,22 @@ movePackages() {
   do
     getPackageDetails "$file"
 
+    local package_dir="$DEFAULT_PACKAGE_DIR/$CODE"
+
+    # If the package is a complete/full one - add COMPLETE identifier to dir/file name.
     if [[ "$CODE" == "$BASE_CODE" ]]; then
-      CODE="${CODE}_FULL"
+      package_dir="${package_dir}/$COMPLETE_PACKAGE"
     fi
 
-    if [[ "$TYPE" == "DSH" ]]; then
-      CODE="${CODE}_${TYPE}"
+    # If the package type is dashboard - add DASHBOARD identifier to dir/file name.
+    if [[ "$TYPE" == "$DASHBOARD_PACKAGE_TYPE" ]]; then
+      package_dir="${package_dir}/${DASHBOARD_PACKAGE}"
     fi
 
-    local final_package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
+    local package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
-    mv "$file" "$(dirname $file)/$final_package_name.json"
-    mv "$(dirname $file)" "../$ARCHIVE_DIR/$final_package_name"
+    mv "$file" "$(dirname $file)/$package_name.json"
+    mv "$(dirname $file)" "../$ARCHIVE_DIR/$package_dir"
   done
 }
 
