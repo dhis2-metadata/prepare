@@ -89,6 +89,10 @@ movePackages() {
   do
     getPackageDetails "$file"
 
+    if [[ "$CODE" == "$BASE_CODE" ]]; then
+      CODE="${CODE}_FULL"
+    fi
+
     if [[ "$TYPE" == "DSH" ]]; then
       CODE="${CODE}_${TYPE}"
     fi
