@@ -93,7 +93,10 @@ movePackages() {
       CODE="${CODE}_${TYPE}"
     fi
 
-    mv "$file" "$(dirname $file)/${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}.json"
+    local final_package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
+
+    mv "$file" "$(dirname $file)/$final_package_name.json"
+    mv "$(dirname $file)" "../$ARCHIVE_DIR/$final_package_name"
   done
 }
 
