@@ -7,6 +7,8 @@ declare -r PACKAGE_VERSION="$2"
 declare -r DEFAULT_PACKAGE_NAME="metadata.json"
 declare -a PACKAGE_DIRS
 declare CODE
+declare BASE_CODE
+declare TYPE
 declare DHIS2_VERSION
 declare LOCALE
 declare ARCHIVE_DIR
@@ -46,6 +48,7 @@ getPackageObject() {
 getPackageDetails() {
   local object=$(getPackageObject "$1")
   CODE=$(echo "$object" | jq -r '.code')
+  TYPE=$(echo "$object" | jq -r '.type')
   DHIS2_VERSION=$(echo "$object" | jq -r '.DHIS2Version' | cut -d '.' -f 1,2)
   LOCALE=$(echo "$object" | jq -r '.locale')
 }
@@ -61,7 +64,9 @@ createArchiveDir() {
 
   getPackageDetails "$first_package"
 
-  ARCHIVE_DIR="${CODE:0:4}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
+  BASE_CODE=$(cut -d '_' -f 1,2 <<< "$CODE")
+
+  ARCHIVE_DIR="${BASE_CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
   mkdir -p "../$ARCHIVE_DIR"
 }
@@ -83,6 +88,11 @@ movePackages() {
   for file in "${package_files[@]}"
   do
     getPackageDetails "$file"
+
+    if [[ "$TYPE" == "DSH" ]]; then
+      CODE="${CODE}_${TYPE}"
+    fi
+
     mv "$file" "$(dirname $file)/${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}.json"
   done
 }
@@ -97,5 +107,5 @@ movePackages
 
 echo "::set-output name=archive_dir::$ARCHIVE_DIR"
 echo "::set-output name=package_locale::$LOCALE"
-echo "::set-output name=package_prefix::${CODE:0:4}"
+echo "::set-output name=package_code::$BASE_CODE"
 echo "::set-output name=dhis2_version::$DHIS2_VERSION"
