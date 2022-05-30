@@ -5,6 +5,9 @@ set -euxo pipefail
 declare -r WORKING_DIRECTORY="$1"
 declare -r PACKAGE_VERSION="$2"
 declare -r DEFAULT_PACKAGE_NAME="metadata.json"
+declare -r COMPLETE_PACKAGE="COMPLETE"
+declare -r DASHBOARD_PACKAGE="DASHBOARD"
+declare -r DASHBOARD_PACKAGE_TYPE="DSH"
 declare -a PACKAGE_DIRS
 declare CODE
 declare BASE_CODE
@@ -90,11 +93,11 @@ movePackages() {
     getPackageDetails "$file"
 
     if [[ "$CODE" == "$BASE_CODE" ]]; then
-      CODE="${CODE}_FULL"
+      CODE="${CODE}_${COMPLETE_PACKAGE}"
     fi
 
-    if [[ "$TYPE" == "DSH" ]]; then
-      CODE="${CODE}_${TYPE}"
+    if [[ "$TYPE" == "$DASHBOARD_PACKAGE_TYPE" ]]; then
+      CODE="${CODE}_${DASHBOARD_PACKAGE}"
     fi
 
     local final_package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
