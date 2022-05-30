@@ -4,7 +4,6 @@ set -euxo pipefail
 
 declare -r WORKING_DIRECTORY="$1"
 declare -r PACKAGE_VERSION="$2"
-declare -r DEFAULT_PACKAGE_NAME="metadata.json"
 declare -r COMPLETE_PACKAGE="COMPLETE"
 declare -r DASHBOARD_PACKAGE="DASHBOARD"
 declare -r DASHBOARD_PACKAGE_TYPE="DSH"
@@ -29,7 +28,7 @@ function find_package_dirs() {
 # $1 - directory
 # Find "package" files within a given directory.
 function find_packages() {
-  find "$1" -type f -name "$DEFAULT_PACKAGE_NAME" | sort
+  find "$1" -type f -name "${2:-*.json}" | sort
 }
 
 # $1 - file
@@ -58,7 +57,7 @@ function get_package_details() {
 
 # Create archive dir based on the package details.
 function create_archive_dir() {
-  local first_package=$(find_packages *)
+  local first_package=$(find_packages . | head -1)
 
   if [[ -z "$first_package" ]]; then
     echo "No package file found."
@@ -107,6 +106,16 @@ function move_packages() {
   done
 }
 
+function verison_packages() {
+  local package_files=($(find_packages "../$ARCHIVE_DIR"))
+
+  for file in "${package_files[@]}"
+  do
+    local tmp_file=$(mktemp)
+    jq ".package .version = \"$PACKAGE_VERSION\"" "$file" > "$tmp_file" && mv "$tmp_file" "$file"
+  done
+}
+
 function main() {
   cd "$WORKING_DIRECTORY"
 
@@ -115,6 +124,8 @@ function main() {
   create_archive_dir
 
   move_packages
+
+  verison_packages
 
   echo "::set-output name=archive_dir::$ARCHIVE_DIR"
   echo "::set-output name=package_locale::$LOCALE"
