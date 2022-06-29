@@ -1,8 +1,24 @@
 name: 'Prepare'
-description: 'Prepare matrix of sources files to S3 destinations'
+description: 'Move and prepare packages for upload to S3.'
+inputs:
+  working_dir:
+    description: 'Working directory path containing packages.'
+    required: true
+  package_version:
+    description: 'The new version for the package.'
+    required: true
 outputs:
-  matrix:
-    description: 'JSON list of objects for Job Strategy Matrix'
+  archive_dir:
+    description: 'Directory with packages to be archived.'
+  package_locale:
+    description: 'Locale of the package.'
+  package_prefix:
+    description: 'Package prefix code.'
+  dhis2_version:
+    description: 'DHIS2 version the package was extracted from.'
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  args:
+    - ${{ inputs.working_dir }}
+    - ${{ inputs.package_version }}

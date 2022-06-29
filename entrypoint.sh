@@ -2,147 +2,132 @@
 
 set -euxo pipefail
 
-declare -a SOURCES
-declare -r MAIN_DIR="complete"
-declare -r SUBSET_DIR="dashboard"
-declare DEFAULT_PATH
-declare DEFAULT_NAME
-declare MATRIX="[]"
 
-# create array of source files for upload
-function getUploadables {
-  SOURCES=($(find "$MAIN_DIR" -type f | sort))
+declare -r WORKING_DIRECTORY="$1"
+declare -r PACKAGE_VERSION="$2"
 
-  if [ -d "$SUBSET_DIR" ]; then
-    subset=($(find "$SUBSET_DIR" -type f | sort))
-    SOURCES+=("${subset[@]}")
+declare -r COMPLETE_PACKAGE="COMPLETE"
+declare -r DASHBOARD_PACKAGE="DASHBOARD"
+declare -r DASHBOARD_PACKAGE_TYPE="DSH"
+declare -r DEFAULT_PACKAGE_NAME="metadata.json"
+declare -r DEFAULT_REFERENCE_NAME="metadata.xlsx"
+
+declare -a PACKAGE_DIRS
+
+declare CODE
+declare BASE_CODE
+declare TYPE
+declare DHIS2_VERSION
+declare LOCALE
+declare ARCHIVE_DIR
+
+
+# Find all package directories.
+function find_package_dirs() {
+  PACKAGE_DIRS=($(find * -type d | sort))
+
+  if [[ -z "$PACKAGE_DIRS" ]]; then
+    echo "No package directories found."
+    exit 1
   fi
 }
 
-# $1 file
-# check if the file is in a subset dir
-function isInSubsetDir {
-  [[ "$1" =~ $SUBSET_DIR  ]]
+# $1 - directory
+# Find "package" files within a given directory.
+function find_packages() {
+  find "$1" -type f -name "${2:-*.json}" | sort
 }
 
 # $1 - file
-# if the extension is json, it's a "package"
-function isPackage {
-  [[ "${1#*.}" == "json" ]]
+# If the file's extension is json, it's a "package".
+function is_package() {
+  local file=$(basename "$1")
+  [[ "${file#*.}" == "json" ]]
 }
 
 # $1 - file
-# if the extension is html or xlsx, it's a "reference"
-function isReference {
-  [[ "${1#*.}" == "html" ]] || [[ "${1#*.}" == "xlsx" ]]
-}
-
-# $1 - file
-# get "package" JSON object from file
-function getPackageObject {
-  if isPackage "$1"; then
+# Get "package" JSON object from file.
+function get_package_object() {
+  if is_package "$1"; then
     jq -r '.package' < "$1"
   fi
 }
 
-# $1 & $2 - file path
-# create source->destination JSON
-function createJson {
-  jq -n --arg key "$1" --arg value "$2" '[{"source": $key, "destination": $value}]'
+# Get the package details.
+function get_package_details() {
+  local object=$(get_package_object "$1")
+  CODE=$(echo "$object" | jq -r '.code')
+  TYPE=$(echo "$object" | jq -r '.type')
+  DHIS2_VERSION=$(echo "$object" | jq -r '.DHIS2Version' | cut -d '.' -f 1,2)
+  LOCALE=$(echo "$object" | jq -r '.locale')
 }
 
-# $1 & $2 - JSON
-# append JSON $2 to $1
-function addToJson {
-  echo "$1" | jq -c --argjson new "$2" '. += $new'
+# Create archive dir based on the package details.
+function create_archive_dir() {
+  local first_package=$(find_packages . | head -1)
+
+  if [[ -z "$first_package" ]]; then
+    echo "No package file found."
+    exit 1
+  fi
+
+  get_package_details "$first_package"
+
+  BASE_CODE=$(cut -d '_' -f 1,2 <<< "$CODE")
+
+  ARCHIVE_DIR="${BASE_CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
+
+  mkdir -p "../$ARCHIVE_DIR"
 }
 
-# $1 - JSON
-# create path from "package" JSON object
-function createPath {
-  # get package details from object
-  locale=$(echo "$1" | jq -r '.locale')
-  code=$(echo "$1" | jq -r '.code')
-  type=$(echo "$1" | jq -r '.type')
-  package_version=$(echo "$1" | jq -r '.version')
-  # remove "patch" part of version for path
-  dhis2_version=$(echo "$1" | jq -r '.DHIS2Version' | cut -d '.' -f 1,2)
-
-  # construct path
-  echo "$locale/$code/$type/$package_version/$dhis2_version"
-}
-
-# $1 - array of files
-# get default path and file name from the first "package" found
-function getDefaultDestination {
-  files=("$@")
-
-  for file in "${files[@]}"
+# Move packages (and their references) to the archive directory with human-readable names.
+function move_packages() {
+  for dir in "${PACKAGE_DIRS[@]}"
   do
-    object=$(getPackageObject "$file")
+    cp -r "$dir" "../$ARCHIVE_DIR"
+    get_package_details "../$ARCHIVE_DIR/$dir/$DEFAULT_PACKAGE_NAME"
 
-    # remove locale from path
-    path=$(createPath "$object")
-    DEFAULT_PATH=${path#*/}
+    if [[ "$CODE" == "$BASE_CODE" ]]; then
+      CODE="${CODE}_${COMPLETE_PACKAGE}"
+    fi
 
-    # remove locale from name
-    name=$(echo "$object" | jq -r '.name')
-    DEFAULT_NAME=${name%-*}
+    if [[ "$TYPE" == "$DASHBOARD_PACKAGE_TYPE" ]]; then
+      CODE="${CODE}_${DASHBOARD_PACKAGE}"
+    fi
 
-    # return after first found file
-    return
+    local final_package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
+
+    mv "../$ARCHIVE_DIR/$dir/$DEFAULT_PACKAGE_NAME" "../$ARCHIVE_DIR/$dir/$final_package_name.json"
+    mv "../$ARCHIVE_DIR/$dir/$DEFAULT_REFERENCE_NAME" "../$ARCHIVE_DIR/$dir/$final_package_name.xlsx"
+    mv "../$ARCHIVE_DIR/$dir" "../$ARCHIVE_DIR/$final_package_name"
   done
 }
 
-# $1 - source file
-# $2 - destination path
-# create destination from source file
-function createDestination {
-  addition=$(createJson "$1" "$2.${1#*.}")
-  MATRIX=$(addToJson "$MATRIX" "$addition")
-}
+function verison_packages() {
+  local package_files=($(find_packages "../$ARCHIVE_DIR"))
 
-# $1 - array of files
-# create matrix of sources and destinations
-function createMatrix {
-  files=("$@")
-
-  # default reference path and file name
-  getDefaultDestination "${files[@]}"
-
-  # create source -> destination for all files
-  for file in "${files[@]}"
+  for file in "${package_files[@]}"
   do
-    packageObject=$(getPackageObject "$file")
-    path=$(createPath "$packageObject")
-
-    file_name=$(echo "$packageObject" | jq -r '.name')
-
-    if isPackage "$file"; then
-      # include subset dir in path if the file is coming from it
-      if isInSubsetDir "$file"; then
-        path+="/$SUBSET_DIR"
-      fi
-
-      createDestination "$file" "$path/$file_name"
-    fi
-
-    if isReference "$file"; then
-      # get reference locale from "parent" directory of the file
-      locale=$(basename $(dirname "$file"))
-
-      # include subset dir in path if the file is coming from it
-      if isInSubsetDir "$file"; then
-        createDestination "$file" "$locale/$DEFAULT_PATH/$SUBSET_DIR/$DEFAULT_NAME-$locale-ref"
-      else
-        createDestination "$file" "$locale/$DEFAULT_PATH/$DEFAULT_NAME-$locale-ref"
-      fi
-    fi
+    local tmp_file=$(mktemp)
+    jq ".package .version = \"$PACKAGE_VERSION\"" "$file" > "$tmp_file" && mv "$tmp_file" "$file"
   done
 }
 
-getUploadables
+function main() {
+  cd "$WORKING_DIRECTORY"
 
-createMatrix "${SOURCES[@]}"
+  find_package_dirs
 
-echo "::set-output name=matrix::$MATRIX"
+  create_archive_dir
+
+  move_packages
+
+  verison_packages
+
+  echo "::set-output name=archive_dir::$ARCHIVE_DIR"
+  echo "::set-output name=package_locale::$LOCALE"
+  echo "::set-output name=package_code::$BASE_CODE"
+  echo "::set-output name=dhis2_version::$DHIS2_VERSION"
+}
+
+main

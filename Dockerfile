@@ -1,7 +1,6 @@
-FROM debian:buster-20210511-slim
+FROM bash:5.1.16
 
-RUN apt update \
-    &&  apt install -y jq
+RUN apk add --no-cache jq
 
 COPY entrypoint.sh /entrypoint.sh
 
