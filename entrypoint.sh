@@ -2,18 +2,25 @@
 
 set -euxo pipefail
 
+
 declare -r WORKING_DIRECTORY="$1"
 declare -r PACKAGE_VERSION="$2"
+
 declare -r COMPLETE_PACKAGE="COMPLETE"
 declare -r DASHBOARD_PACKAGE="DASHBOARD"
 declare -r DASHBOARD_PACKAGE_TYPE="DSH"
+declare -r DEFAULT_PACKAGE_NAME="metadata.json"
+declare -r DEFAULT_REFERENCE_NAME="metadata.xlsx"
+
 declare -a PACKAGE_DIRS
+
 declare CODE
 declare BASE_CODE
 declare TYPE
 declare DHIS2_VERSION
 declare LOCALE
 declare ARCHIVE_DIR
+
 
 # Find all package directories.
 function find_package_dirs() {
@@ -73,23 +80,12 @@ function create_archive_dir() {
   mkdir -p "../$ARCHIVE_DIR"
 }
 
-# Move packages to the archive directory.
+# Move packages (and their references) to the archive directory with human-readable names.
 function move_packages() {
   for dir in "${PACKAGE_DIRS[@]}"
   do
     cp -r "$dir" "../$ARCHIVE_DIR"
-  done
-
-  local package_files=($(find_packages "../$ARCHIVE_DIR"))
-
-  if [[ -z "$package_files" ]]; then
-    echo "No package files found in the archive dir."
-    exit 1
-  fi
-
-  for file in "${package_files[@]}"
-  do
-    get_package_details "$file"
+    get_package_details "../$ARCHIVE_DIR/$dir/$DEFAULT_PACKAGE_NAME"
 
     if [[ "$CODE" == "$BASE_CODE" ]]; then
       CODE="${CODE}_${COMPLETE_PACKAGE}"
@@ -101,8 +97,9 @@ function move_packages() {
 
     local final_package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
-    mv "$file" "$(dirname $file)/$final_package_name.json"
-    mv "$(dirname $file)" "../$ARCHIVE_DIR/$final_package_name"
+    mv "../$ARCHIVE_DIR/$dir/$DEFAULT_PACKAGE_NAME" "../$ARCHIVE_DIR/$dir/$final_package_name.json"
+    mv "../$ARCHIVE_DIR/$dir/$DEFAULT_REFERENCE_NAME" "../$ARCHIVE_DIR/$dir/$final_package_name.xlsx"
+    mv "../$ARCHIVE_DIR/$dir" "../$ARCHIVE_DIR/$final_package_name"
   done
 }
 
