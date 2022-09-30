@@ -10,7 +10,6 @@ declare -r COMPLETE_PACKAGE="COMPLETE"
 declare -r DASHBOARD_PACKAGE="DASHBOARD"
 declare -r DASHBOARD_PACKAGE_TYPE="DSH"
 declare -r DEFAULT_PACKAGE_NAME="metadata.json"
-declare -r DEFAULT_REFERENCE_NAME="metadata.xlsx"
 
 declare -a PACKAGE_DIRS
 
@@ -80,7 +79,7 @@ function create_archive_dir() {
   mkdir -p "../$ARCHIVE_DIR"
 }
 
-# Move packages (and their references) to the archive directory with human-readable names.
+# Move packages to the archive directory with human-readable names.
 function move_packages() {
   for dir in "${PACKAGE_DIRS[@]}"
   do
@@ -98,7 +97,6 @@ function move_packages() {
     local final_package_name="${CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
     mv "../$ARCHIVE_DIR/$dir/$DEFAULT_PACKAGE_NAME" "../$ARCHIVE_DIR/$dir/$final_package_name.json"
-    mv "../$ARCHIVE_DIR/$dir/$DEFAULT_REFERENCE_NAME" "../$ARCHIVE_DIR/$dir/$final_package_name.xlsx"
     mv "../$ARCHIVE_DIR/$dir" "../$ARCHIVE_DIR/$final_package_name"
   done
 }
