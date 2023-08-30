@@ -18,8 +18,11 @@ Directory with packages to be archived.
 ### `package_locale`
 Locale of the package.
 
-### `package_prefix`
-Package prefix code.
+### `package_code`
+Package code.
+
+### `package_base_code`
+Package base code.
 
 ### `dhis2_version`
 DHIS2 version the package was extracted from.
