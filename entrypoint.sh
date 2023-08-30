@@ -75,6 +75,10 @@ function create_archive_dir() {
   FULL_CODE="$CODE"
   BASE_CODE=$(cut -d '_' -f 1,2 <<< "$CODE")
 
+  if [[ "$FULL_CODE" == "$BASE_CODE" ]]; then
+    FULL_CODE="${FULL_CODE}_${COMPLETE_PACKAGE}"
+  fi
+
   ARCHIVE_DIR="${BASE_CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
   mkdir -p "../$ARCHIVE_DIR"
