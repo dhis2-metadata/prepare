@@ -72,6 +72,7 @@ function create_archive_dir() {
 
   get_package_details "$first_package"
 
+  FULL_CODE="$CODE"
   BASE_CODE=$(cut -d '_' -f 1,2 <<< "$CODE")
 
   ARCHIVE_DIR="${BASE_CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
@@ -122,10 +123,11 @@ function main() {
 
   verison_packages
 
-  echo "::set-output name=archive_dir::$ARCHIVE_DIR"
-  echo "::set-output name=package_locale::$LOCALE"
-  echo "::set-output name=package_code::$BASE_CODE"
-  echo "::set-output name=dhis2_version::$DHIS2_VERSION"
+  echo "archive_dir=$ARCHIVE_DIR" >> $GITHUB_OUTPUT
+  echo "package_locale=$LOCALE" >> $GITHUB_OUTPUT
+  echo "package_code=$FULL_CODE" >> $GITHUB_OUTPUT
+  echo "package_base_code=$BASE_CODE" >> $GITHUB_OUTPUT
+  echo "dhis2_version=$DHIS2_VERSION" >> $GITHUB_OUTPUT
 }
 
 main
