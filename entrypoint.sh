@@ -13,8 +13,9 @@ declare -r DEFAULT_PACKAGE_NAME="metadata.json"
 
 declare -a PACKAGE_DIRS
 
-declare CODE
-declare BASE_CODE
+declare CODE # The code of the current package component.
+declare FULL_CODE # The code of the COMPLETE package component for multi-component packages or other standalone package category.
+declare BASE_CODE # The code of the package.
 declare TYPE
 declare DHIS2_VERSION
 declare LOCALE
@@ -63,21 +64,20 @@ function get_package_details() {
 
 # Create archive dir based on the package details.
 function create_archive_dir() {
-  local first_package=$(find_packages . | head -1)
+  local packages=$(find_packages .)
+  local first_package=$(echo "$packages"| head -1)
+  local complete_package="$COMPLETE_PACKAGE/$DEFAULT_PACKAGE_NAME"
 
-  if [[ -z "$first_package" ]]; then
-    echo "No package file found."
-    exit 1
+  # shellcheck disable=SC2143
+  if [[ -n $(echo "$packages" | grep "$complete_package") ]]; then
+    get_package_details "$complete_package"
+    FULL_CODE="${CODE}_${COMPLETE_PACKAGE}"
+  else
+    get_package_details "$first_package"
+    FULL_CODE="$CODE"
   fi
 
-  get_package_details "$first_package"
-
-  FULL_CODE="$CODE"
-  BASE_CODE=$(cut -d '_' -f 1,2 <<< "$CODE")
-
-  if [[ "$FULL_CODE" == "$BASE_CODE" ]]; then
-    FULL_CODE="${FULL_CODE}_${COMPLETE_PACKAGE}"
-  fi
+  BASE_CODE="$CODE"
 
   ARCHIVE_DIR="${BASE_CODE}_${PACKAGE_VERSION}_DHIS${DHIS2_VERSION}"
 
@@ -92,7 +92,7 @@ function move_packages() {
     get_package_details "../$ARCHIVE_DIR/$dir/$DEFAULT_PACKAGE_NAME"
 
     if [[ "$CODE" == "$BASE_CODE" ]]; then
-      CODE="${CODE}_${COMPLETE_PACKAGE}"
+      CODE="$FULL_CODE"
     fi
 
     if [[ "$TYPE" == "$DASHBOARD_PACKAGE_TYPE" ]]; then
@@ -106,7 +106,7 @@ function move_packages() {
   done
 }
 
-function verison_packages() {
+function version_packages() {
   local package_files=($(find_packages "../$ARCHIVE_DIR"))
 
   for file in "${package_files[@]}"
@@ -125,7 +125,7 @@ function main() {
 
   move_packages
 
-  verison_packages
+  version_packages
 
   echo "archive_dir=$ARCHIVE_DIR" >> $GITHUB_OUTPUT
   echo "package_locale=$LOCALE" >> $GITHUB_OUTPUT
